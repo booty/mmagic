@@ -112,3 +112,8 @@ yarn-debug.log*
 # Ignore uploaded files in development
 /storage/*
 !/storage/.keep
+
+###############################################################3
+# Added by me
+###############################################################3
+.DS_Store
