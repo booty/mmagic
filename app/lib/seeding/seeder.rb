@@ -13,12 +13,13 @@ class Seeding
       @last_log_time = Time.current
     end
 
+    # We do some slightly fugly stuff here in the name of performance
+    # so we can rebuild the closure_tree hierarchy later
+    # If we switch from SQLite to Postgres we can skip a few steps here
     def seed_places!
       Place.delete_all
 
-      seed_regions(
-        num_regions_range: DEFAULT_NUM_REGIONS,
-      )
+      seed_regions(num_regions_range: DEFAULT_NUM_REGIONS)
       regions = Place.all
       log("Seeded #{regions.length} regions")
 
