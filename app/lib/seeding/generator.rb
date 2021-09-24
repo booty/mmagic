@@ -173,7 +173,7 @@ class Seeding
 
     FOOD_CATEGORIES = %w{
       pizza italian\ food chinese-american BBQ random\ fried\ objects sushi
-      burgers asian curry american\ food soul\ food hot dogs ice\ cream tacos
+      burgers asian curry american\ food soul\ food hot\ dogs ice\ cream tacos
       frozen\ yogurt steak seafood donuts
     }.freeze
 
