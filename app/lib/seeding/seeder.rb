@@ -3,8 +3,8 @@
 class Seeding
   class Seeder
     DEFAULT_NUM_REGIONS = 7..7 # 7..7
-    DEFAULT_NUM_SUBREGIONS_PER_REGION = 15..15 # 5..15
-    DEFAULT_NUM_UNITS_PER_SUBREGION = 25..25 # 10..25
+    DEFAULT_NUM_SUBREGIONS_PER_REGION = 10..10 # 5..15
+    DEFAULT_NUM_UNITS_PER_SUBREGION = 20..20 #25..25 # 10..25
     BATCH_IMPORT_SIZE = 2000
 
     def initialize
@@ -17,29 +17,31 @@ class Seeding
     # so we can rebuild the closure_tree hierarchy later
     # If we switch from SQLite to Postgres we can skip a few steps here
     def seed_places!
+      log(" --- start ---")
       Place.delete_all
 
       seed_regions(num_regions_range: DEFAULT_NUM_REGIONS)
-      regions = Place.all
-      log("Seeded #{regions.length} regions")
+      # We can't simply use the records returned by seed_regions, because
+      # they won't have id's following the bulk import. This is a limitation
+      # of SQLite & activerecord-import; would not be an issue with Postgres
+      region_places = Place.all
+      log("Seeded #{region_places.length} regions")
 
       seed_subregions(
-        regions: regions,
+        region_places: region_places,
         num_subregions_range: DEFAULT_NUM_SUBREGIONS_PER_REGION,
       )
-      subregions = Place.all - regions
-      log("Seeded #{subregions.length} subregions")
+      subregion_places = Place.all - region_places
+      log("Seeded #{subregion_places.length} subregions")
 
-      units = seed_units(
-        subregions: subregions,
+      seed_units(
+        subregion_places: subregion_places,
         num_units_range: DEFAULT_NUM_UNITS_PER_SUBREGION,
       )
-      all_places = Place.all
-      units = all_places - (subregions + regions)
-      log("Seeded #{units.length} units")
+      log("Seeded #{Place.count - region_places.length - subregion_places.length} units")
 
-      rebuild_hierarchy(all_places, regions, subregions, units)
-      log("Rebuilt places_hierarchies")
+      hierarchy_count = rebuild_hierarchy(region_places, subregion_places)
+      log("Rebuilt #{hierarchy_count} places_hierarchies")
     end
 
     private
@@ -48,35 +50,44 @@ class Seeding
     # so, we do it ourselves. we can do it quickly because we know the tree structure
     # and even more quickly because we use activerecord-import for a bulk insert
     # Now takes ~0.5sec for ~3K groupsP
-    def rebuild_hierarchy(all_places, regions, subregions, units)
+    def rebuild_hierarchy(region_places, subregion_places)
       PlaceHierarchy.delete_all
-      places_by_id = all_places.index_by(&:id)
+      region_place_ids = region_places.map(&:id)
+      subregion_place_ids = subregion_places.map(&:id)
+      region_and_subregion_place_ids = (region_place_ids + subregion_place_ids)
+
+      unit_place_ids = Place.where.not(id: region_and_subregion_place_ids).pluck(:id)
+
+      parent_ids = Place.
+        pluck(:id, :parent_id).
+        each_with_object({}) { |x, memo| memo[x[0]] = x[1] }
 
       stuff = []
 
-      stuff << units.map do |unit|
-        me = { descendant_id: unit.id }
-        region_id = places_by_id[unit.parent_id].parent_id
+      stuff << unit_place_ids.map do |unit_place_id|
+        parent_id = parent_ids[unit_place_id]
+        grandparent_id = parent_ids[parent_ids[unit_place_id]]
+        me = { descendant_id: unit_place_id }
         [
-          { **me, ancestor_id: unit.id, generations: 0 },
-          { **me, ancestor_id: unit.parent_id, generations: 1 },
-          { **me, ancestor_id: region_id, generations: 2 },
+          { **me, ancestor_id: unit_place_id, generations: 0 },
+          { **me, ancestor_id: parent_id, generations: 1 },
+          { **me, ancestor_id: grandparent_id, generations: 2 },
         ]
       end
 
-      stuff << subregions.map do |subregion|
-        me = { descendant_id: subregion.id }
+      stuff << subregion_place_ids.map do |subregion_place_id|
+        me = { descendant_id: subregion_place_id }
         [
-          { **me, ancestor_id: subregion.id, generations: 0 },
-          { **me, ancestor_id: subregion.parent_id, generations: 1 },
+          { **me, ancestor_id: subregion_place_id, generations: 0 },
+          { **me, ancestor_id: parent_ids[subregion_place_id], generations: 1 },
         ]
       end
 
-      stuff << regions.map do |region|
-        { ancestor_id: region.id, descendant_id: region.id, generations: 0 }
+      stuff << region_place_ids.map do |region_place_id|
+        { ancestor_id: region_place_id, descendant_id: region_place_id, generations: 0 }
       end
-
       PlaceHierarchy.import(stuff.flatten)
+      stuff.flatten.length
     end
 
     def log(msg)
@@ -115,8 +126,8 @@ class Seeding
       regions
     end
 
-    def seed_subregions(regions:, num_subregions_range:)
-      subregions = regions.map do |region|
+    def seed_subregions(region_places:, num_subregions_range:)
+      subregion_places = region_places.map do |region|
         num_subregions = rand(num_subregions_range)
         subregion_names = Seeding::Generator::REGIONS_AND_SUBREGIONS[region.name].
           sample(num_subregions)
@@ -132,32 +143,35 @@ class Seeding
         end
       end.flatten
 
-      Place.import(subregions)
-
-      subregions
+      Place.import(subregion_places)
+      subregion_places
     end
 
-    def seed_units(subregions:, num_units_range:)
-      units = subregions.map do |subregion|
+    # TODO:
+    #   Generating the place names is somewhat slow: ~500msec for ~3K names
+    #   Could probably precalculate 50,000 names, store them in a file, randomly
+    #   select from there?
+    def seed_units(subregion_places:, num_units_range:)
+      unit_places = subregion_places.map do |subregion_place|
         rand(num_units_range).times.map do
           if roll_d100 < 66
             {
               name: Seeding::Generator.restaurant_name,
               place_type: :restaurant,
-              parent_id: subregion.id,
+              parent_id: subregion_place.id,
             }
           else
             {
               name: Seeding::Generator.restaurant_name,
               place_type: :restaurant,
-              parent_id: subregion.id,
+              parent_id: subregion_place.id,
             }
           end
         end
       end.flatten
 
-      Place.import(units, batch_size: BATCH_IMPORT_SIZE)
-      units
+      Place.import(unit_places, batch_size: BATCH_IMPORT_SIZE)
+      unit_places
     end
   end
 end
