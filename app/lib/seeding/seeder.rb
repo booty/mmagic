@@ -5,9 +5,10 @@ class Seeding
     DEFAULT_NUM_REGIONS = 7..7 # 7..7
     DEFAULT_NUM_SUBREGIONS_PER_REGION = 15..15 # 5..15
     DEFAULT_NUM_UNITS_PER_SUBREGION = 25..25 # 10..25
-    BATCH_IMPORT_SIZE = 1000
+    BATCH_IMPORT_SIZE = 2000
 
     def initialize
+      require "faker"
       @start_time = Time.current
       @last_log_time = Time.current
     end
@@ -15,27 +16,67 @@ class Seeding
     def seed_places!
       Place.delete_all
 
-      regions = seed_regions(
+      seed_regions(
         num_regions_range: DEFAULT_NUM_REGIONS,
       )
+      regions = Place.all
       log("Seeded #{regions.length} regions")
 
-      subregions = seed_subregions(
+      seed_subregions(
         regions: regions,
-        num_subregions_range: DEFAULT_NUM_UNITS_PER_SUBREGION,
+        num_subregions_range: DEFAULT_NUM_SUBREGIONS_PER_REGION,
       )
+      subregions = Place.all - regions
       log("Seeded #{subregions.length} subregions")
 
       units = seed_units(
         subregions: subregions,
         num_units_range: DEFAULT_NUM_UNITS_PER_SUBREGION,
       )
+      all_places = Place.all
+      units = all_places - (subregions + regions)
       log("Seeded #{units.length} units")
 
-      [regions, subregions, units].sum(&:length)
+      rebuild_hierarchy(all_places, regions, subregions, units)
+      log("Rebuilt places_hierarchies")
     end
 
     private
+
+    # Closure_tree's .rebuild! method is extremely inefficient; ~13sec for ~3K groups
+    # so, we do it ourselves. we can do it quickly because we know the tree structure
+    # and even more quickly because we use activerecord-import for a bulk insert
+    # Now takes ~0.5sec for ~3K groupsP
+    def rebuild_hierarchy(all_places, regions, subregions, units)
+      PlaceHierarchy.delete_all
+      places_by_id = all_places.index_by(&:id)
+
+      stuff = []
+
+      stuff << units.map do |unit|
+        me = { descendant_id: unit.id }
+        region_id = places_by_id[unit.parent_id].parent_id
+        [
+          { **me, ancestor_id: unit.id, generations: 0 },
+          { **me, ancestor_id: unit.parent_id, generations: 1 },
+          { **me, ancestor_id: region_id, generations: 2 },
+        ]
+      end
+
+      stuff << subregions.map do |subregion|
+        me = { descendant_id: subregion.id }
+        [
+          { **me, ancestor_id: subregion.id, generations: 0 },
+          { **me, ancestor_id: subregion.parent_id, generations: 1 },
+        ]
+      end
+
+      stuff << regions.map do |region|
+        { ancestor_id: region.id, descendant_id: region.id, generations: 0 }
+      end
+
+      PlaceHierarchy.import(stuff.flatten)
+    end
 
     def log(msg)
       location = caller_locations(1, 1)[0]
@@ -99,24 +140,16 @@ class Seeding
       units = subregions.map do |subregion|
         rand(num_units_range).times.map do
           if roll_d100 < 66
-            # Place.new(
-            #   name: Seeding::Generator.facility_name,
-            #   place_type: :facility,
-            #   parent: subregion,
-            # )
             {
               name: Seeding::Generator.restaurant_name,
               place_type: :restaurant,
+              parent_id: subregion.id,
             }
           else
-            # Place.new(
-            #   name: Seeding::Generator.restaurant_name,
-            #   place_type: :restaurant,
-            #   parent: subregion,
-            # )
             {
               name: Seeding::Generator.restaurant_name,
               place_type: :restaurant,
+              parent_id: subregion.id,
             }
           end
         end
