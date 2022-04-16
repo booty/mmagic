@@ -2,10 +2,12 @@
 
 class Seeding
   class Seeder
-    DEFAULT_NUM_REGIONS = 7..7 # 7..7
-    DEFAULT_NUM_SUBREGIONS_PER_REGION = 10..10 # 5..15
-    DEFAULT_NUM_UNITS_PER_SUBREGION = 20..20 #25..25 # 10..25
+    DEFAULT_NUM_CORPORATIONS = 5..5
+    DEFAULT_NUM_REGIONS_PER_CORPORATION = 6..6 # 7..7
+    DEFAULT_NUM_SUBREGIONS_PER_REGION = 7..7 # 5..15
+    DEFAULT_NUM_UNITS_PER_SUBREGION = 9..9 #25..25 # 10..25
     BATCH_IMPORT_SIZE = 2000
+    MONITOR_MAGIC_CORPORATION_NAME = "Monitor Magic, Inc."
 
     def initialize
       require "faker"
@@ -13,35 +15,78 @@ class Seeding
       @last_log_time = Time.current
     end
 
+    def seed!
+      seed_places!
+      seed_checklists!
+    end
+
+    def seed_checklists!
+      log(" --- start (seeding checklists) ---")
+      Checklist.delete_all
+
+      checklist_data = Place.pluck(:id).map do |place_id|
+        {
+          place_id: place_id,
+          name: "Checklist 1",
+          contents: {
+            "item1": {
+              name: "Item 1",
+              numeric_min: place_id,
+              numeric_max: place_id,
+            },
+            "item#{place_id}": {
+              name: "Item #{place_id}",
+              numeric_min: place_id,
+              numeric_max: place_id,
+            },
+          },
+        }
+      end
+
+      ActiveRecord::Base.logger.silence do
+        Checklist.import(checklist_data)
+      end
+    end
+
     # We do some slightly fugly stuff here in the name of performance
     # so we can rebuild the closure_tree hierarchy later
     # If we switch from SQLite to Postgres we can skip a few steps here
     def seed_places!
-      log(" --- start ---")
+      log(" --- start (seeding places) ---")
       Place.delete_all
 
-      seed_regions(num_regions_range: DEFAULT_NUM_REGIONS)
+      seed_corporations!(num_corporations_range: DEFAULT_NUM_CORPORATIONS)
+      corporation_places = Place.all.where.not(name: MONITOR_MAGIC_CORPORATION_NAME)
+      log("Seeded #{corporation_places.length} corporations")
+
+      seed_regions(
+        corporation_places: corporation_places,
+        num_regions_per_corporation_range: DEFAULT_NUM_REGIONS_PER_CORPORATION,
+      )
+
       # We can't simply use the records returned by seed_regions, because
       # they won't have id's following the bulk import. This is a limitation
       # of SQLite & activerecord-import; would not be an issue with Postgres
-      region_places = Place.all
+      region_places = Place.all - corporation_places
       log("Seeded #{region_places.length} regions")
 
       seed_subregions(
         region_places: region_places,
         num_subregions_range: DEFAULT_NUM_SUBREGIONS_PER_REGION,
       )
-      subregion_places = Place.all - region_places
+      subregion_places = Place.all - corporation_places - region_places
       log("Seeded #{subregion_places.length} subregions")
 
       seed_units(
         subregion_places: subregion_places,
         num_units_range: DEFAULT_NUM_UNITS_PER_SUBREGION,
       )
-      log("Seeded #{Place.count - region_places.length - subregion_places.length} units")
+      total_place_count = Place.count
+      unit_place_count = total_place_count - corporation_places.length - region_places.length - subregion_places.length
+      log("Seeded #{unit_place_count} units")
 
       hierarchy_count = rebuild_hierarchy(region_places, subregion_places)
-      log("Rebuilt #{hierarchy_count} places_hierarchies")
+      log("Rebuilt #{hierarchy_count} places_hierarchies for #{total_place_count} places")
     end
 
     private
@@ -86,7 +131,9 @@ class Seeding
       stuff << region_place_ids.map do |region_place_id|
         { ancestor_id: region_place_id, descendant_id: region_place_id, generations: 0 }
       end
-      PlaceHierarchy.import(stuff.flatten)
+      ActiveRecord::Base.logger.silence do
+        PlaceHierarchy.import(stuff.flatten)
+      end
       stuff.flatten.length
     end
 
@@ -109,27 +156,47 @@ class Seeding
       rand(1..100)
     end
 
-    def seed_regions(num_regions_range:)
-      num_regions = rand(num_regions_range)
-      region_names = Seeding::Generator::REGIONS_AND_SUBREGIONS.keys.sample(num_regions)
+    def seed_corporations!(num_corporations_range:)
+      mmagic_corporation_place = Place.create(
+        name: "Monitor Magic, Inc.",
+        place_type: :corporation,
+      )
 
-      regions = region_names.map do |region_name|
-        Place.new(
+      corporation_places = rand(num_corporations_range).times.map do
+        {
+          name: Seeding::Generator.corporation_name,
+          place_type: :corporation,
+          parent_id: mmagic_corporation_place.id,
+        }
+      end
+
+      ActiveRecord::Base.logger.silence do
+        Place.import(corporation_places)
+      end
+    end
+
+    def seed_regions(corporation_places:, num_regions_per_corporation_range:)
+      regions = corporation_places.each.map do |corporation_place|
+        num_regions = rand(num_regions_per_corporation_range)
+        region_names = Seeding::Text::REGIONS_AND_SUBREGIONS.keys.sample(num_regions)
+        region_names.map do |region_name|
           {
             name: region_name,
             place_type: :grouping,
-          },
-        )
+            parent_id: corporation_place.id,
+          }
+        end
       end
-
-      Place.import(regions)
-      regions
+      ActiveRecord::Base.logger.silence do
+        Place.import(regions.flatten)
+      end
     end
 
     def seed_subregions(region_places:, num_subregions_range:)
       subregion_places = region_places.map do |region|
         num_subregions = rand(num_subregions_range)
-        subregion_names = Seeding::Generator::REGIONS_AND_SUBREGIONS[region.name].
+
+        subregion_names = Seeding::Text::REGIONS_AND_SUBREGIONS[region.name].
           sample(num_subregions)
 
         num_subregions.times.map do
@@ -143,8 +210,9 @@ class Seeding
         end
       end.flatten
 
-      Place.import(subregion_places)
-      subregion_places
+      ActiveRecord::Base.logger.silence do
+        Place.import(subregion_places)
+      end
     end
 
     # TODO:
@@ -170,8 +238,9 @@ class Seeding
         end
       end.flatten
 
-      Place.import(unit_places, batch_size: BATCH_IMPORT_SIZE)
-      unit_places
+      ActiveRecord::Base.logger.silence do
+        Place.import(unit_places, batch_size: BATCH_IMPORT_SIZE)
+      end
     end
   end
 end
