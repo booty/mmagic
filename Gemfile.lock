@@ -106,11 +106,14 @@ GEM
     marcel (1.0.1)
     method_source (1.0.0)
     mini_mime (1.1.1)
+    mini_portile2 (2.6.1)
     minitest (5.14.4)
     msgpack (1.4.2)
     nio4r (2.5.8)
-    nokogiri (1.12.4-x86_64-darwin)
+    nokogiri (1.12.4)
+      mini_portile2 (~> 2.6.1)
       racc (~> 1.4)
+    oj (3.13.7)
     pry (0.13.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -227,6 +230,7 @@ DEPENDENCIES
   faker
   jbuilder (~> 2.7)
   listen (~> 3.3)
+  oj
   pry-byebug
   pry-rails
   puma (~> 5.0)
@@ -243,7 +247,7 @@ DEPENDENCIES
   webpacker (~> 5.0)
 
 RUBY VERSION
-   ruby 3.0.2p107
+   ruby 3.1.1p18
 
 BUNDLED WITH
    2.2.22
