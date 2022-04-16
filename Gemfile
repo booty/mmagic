@@ -36,7 +36,6 @@ gem "closure_tree"
 gem "faker", require: false
 gem "oj"
 
-
 group :development, :test do
   gem "awesome_print"
   gem "pry-byebug"
