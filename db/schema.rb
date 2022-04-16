@@ -10,7 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_09_24_041421) do
+ActiveRecord::Schema.define(version: 2021_09_28_035058) do
+
+  create_table "checklist_items", force: :cascade do |t|
+    t.integer "place_id", null: false
+    t.json "contents", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["place_id"], name: "index_checklist_items_on_place_id"
+  end
 
   create_table "checklists", force: :cascade do |t|
     t.integer "parent_id"
