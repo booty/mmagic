@@ -10,13 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_09_28_035058) do
-
+ActiveRecord::Schema[7.0].define(version: 2021_09_28_035058) do
   create_table "checklist_items", force: :cascade do |t|
     t.integer "place_id", null: false
     t.json "contents", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["place_id"], name: "index_checklist_items_on_place_id"
   end
 
@@ -25,9 +24,9 @@ ActiveRecord::Schema.define(version: 2021_09_28_035058) do
     t.integer "place_id", null: false
     t.string "name", null: false
     t.json "contents"
-    t.datetime "published_at"
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "published_at", precision: nil
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "place_hierarchies", id: false, force: :cascade do |t|
@@ -42,8 +41,8 @@ ActiveRecord::Schema.define(version: 2021_09_28_035058) do
     t.integer "parent_id"
     t.integer "place_type", null: false
     t.string "name", null: false
-    t.datetime "created_at", precision: 6, null: false
-    t.datetime "updated_at", precision: 6, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
 end
