@@ -1,0 +1,100 @@
+# Cops can customize their severity level. Allowed values
+# are info, refactor, convention, warning, error and fatal.
+#
+# Enabling/disabling cops
+#   Specific cops
+#   # rubocop:disable Layout/LineLength, Style/StringLiterals
+#   # rubocop:enable Layout/LineLength, Style/StringLiterals
+#   Entire departments
+#   # rubocop:disable Metrics, Layout/LineLength
+#   # rubocop:enable Metrics, Layout/LineLength
+#   Everything
+#   # rubocop:disable all
+#   # rubocop:enable all
+#   Inline3
+#   puts # rubocop: disable Foo/bar
+---
+require:
+  - rubocop-rails
+
+AllCops:
+  NewCops: enable
+
+# ▄▄▄▄
+# ▀▀██                                                ██
+#   ██       ▄█████▄  ▀██  ███   ▄████▄   ██    ██  ███████
+#   ██       ▀ ▄▄▄██   ██▄ ██   ██▀  ▀██  ██    ██    ██
+#   ██      ▄██▀▀▀██    ████▀   ██    ██  ██    ██    ██
+#   ██▄▄▄   ██▄▄▄███     ███    ▀██▄▄██▀  ██▄▄▄███    ██▄▄▄
+#    ▀▀▀▀    ▀▀▀▀ ▀▀     ██       ▀▀▀▀     ▀▀▀▀ ▀▀     ▀▀▀▀
+#                      ███
+
+Layout/DotPosition:
+  EnforcedStyle: trailing
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+#                                            ██
+#                       ██                   ▀▀
+# ████▄██▄   ▄████▄   ███████    ██▄████   ████      ▄█████▄  ▄▄█████▄
+# ██ ██ ██  ██▄▄▄▄██    ██       ██▀         ██     ██▀    ▀  ██▄▄▄▄ ▀
+# ██ ██ ██  ██▀▀▀▀▀▀    ██       ██          ██     ██         ▀▀▀▀██▄
+# ██ ██ ██  ▀██▄▄▄▄█    ██▄▄▄    ██       ▄▄▄██▄▄▄  ▀██▄▄▄▄█  █▄▄▄▄▄██
+# ▀▀ ▀▀ ▀▀    ▀▀▀▀▀      ▀▀▀▀    ▀▀       ▀▀▀▀▀▀▀▀    ▀▀▀▀▀    ▀▀▀▀▀▀
+
+Metrics/ClassLength:
+  CountAsOne: &count_as_one
+    - array
+    - heredoc
+    - hash
+
+Metrics/AbcSize:
+  CountRepeatedAttributes: true             # may want to set this to false?
+  Max: 17
+
+Metrics/CyclomaticComplexity:
+  Max: 7
+
+Metrics/BlockLength:
+  CountAsOne: *count_as_one
+  Max: 25                                   # default is 25
+  # Exclude: [] # list of filenames to ignore, default is **/*.gemspec
+
+Metrics/MethodLength:
+  CountAsOne: *count_as_one
+  Max: 15
+  # Severity: *metrics_severity # crashes rubocop for some reason lol
+
+#                               ▄▄▄▄
+#             ██                ▀▀██
+# ▄▄█████▄  ███████   ▀██  ███    ██       ▄████▄
+# ██▄▄▄▄ ▀    ██       ██▄ ██     ██      ██▄▄▄▄██
+#  ▀▀▀▀██▄    ██        ████▀     ██      ██▀▀▀▀▀▀
+# █▄▄▄▄▄██    ██▄▄▄      ███      ██▄▄▄   ▀██▄▄▄▄█
+#  ▀▀▀▀▀▀      ▀▀▀▀      ██        ▀▀▀▀     ▀▀▀▀▀
+#                      ███
+
+Style/Documentation:
+  Enabled: false
+
+Style/FormatString:
+  EnforcedStyle: sprintf
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/SymbolArray:
+  Enabled: false
+
+Style/TrailingCommaInArguments:
+  Enabled: true
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: true
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInHashLiteral:
+  Enabled: true
+  EnforcedStyleForMultiline: consistent_comma
