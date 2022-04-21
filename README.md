@@ -1,24 +1,19 @@
-# README
+# Purpose
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This is a demonstration application.
 
-Things you may want to cover:
+The idea is to simulate a company, "Monitor Magic", that
+provides remote sensor monitoring and checklist services
+to the food industry.
 
-* Ruby version
+# Technical Concepts Illustrated
 
-* System dependencies
+We'll explore fast and efficient ways to:
 
-* Configuration
+- Regenerate seed data for a hierarchy of thousands of restaurants
+- Store and search upon reasonably large datasets of sensor data and checklists
+- Provide performant realtime dashboards
+- Propagate changes through a hierarchy of checklists
 
-* Database creation
 
-* Database initialization
 
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
