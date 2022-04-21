@@ -153,7 +153,7 @@ class Seeding
                }
              when 1
                words << Seeding::Text::SYNONYMS_FOR_CHECKING.sample
-               words << "#{Seeding::Text::COLD_SOLID_FOODS.sample}"
+               words << " #{Seeding::Text::COLD_SOLID_FOODS.sample}"
                words << "temperature"
                {
                  type: "numeric",
@@ -221,7 +221,7 @@ class Seeding
                  multiple_choice_values: "oh yeah that's nice|tastes good|tastes bad|something is terribly wrong here",
                  multiple_choice_values_correct: "oh yeah that's nice|tastes good",
                }
-             when 9
+             when 10
                words << Seeding::Text::CLEANING_ADJECTIVES.sample if roll_d100 < 25
                words << Seeding::Text::EQUIPMENT_VERBS.sample
                words << Seeding::Text::ALL_LIQUID_FOODS.sample
@@ -229,7 +229,7 @@ class Seeding
                {
                  **completed_or_not_completed,
                }
-             when 10
+             when 11
                words << Seeding::Text::PLACEMENT_VERBS.sample
                words << Seeding::Text::ALL_SOLID_FOODS.sample
                words << "into"
@@ -238,7 +238,7 @@ class Seeding
                {
                  **completed_or_not_completed,
                }
-             when 11
+             when 12
                words << %w{brief consult query inform}.sample
                words << Faker::Job.seniority if roll_d100 < 66
                words << Seeding::Text::ALL_FOODS.sample
