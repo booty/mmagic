@@ -5,7 +5,7 @@ class Seeding
     DEFAULT_NUM_CORPORATIONS = 5..5
     DEFAULT_NUM_REGIONS_PER_CORPORATION = 6..6 # 7..7
     DEFAULT_NUM_SUBREGIONS_PER_REGION = 7..7 # 5..15
-    DEFAULT_NUM_UNITS_PER_SUBREGION = 9..9 #25..25 # 10..25
+    DEFAULT_NUM_UNITS_PER_SUBREGION = 9..9 # 25..25 # 10..25
     BATCH_IMPORT_SIZE = 2000
     MONITOR_MAGIC_CORPORATION_NAME = "Monitor Magic, Inc."
 
@@ -29,7 +29,7 @@ class Seeding
           place_id: place_id,
           name: "Checklist 1",
           contents: {
-            "item1": {
+            item1: {
               name: "Item 1",
               numeric_min: place_id,
               numeric_max: place_id,
@@ -94,7 +94,8 @@ class Seeding
     # Closure_tree's .rebuild! method is extremely inefficient; ~13sec for ~3K groups
     # so, we do it ourselves. we can do it quickly because we know the tree structure
     # and even more quickly because we use activerecord-import for a bulk insert
-    # Now takes ~0.5sec for ~3K groupsP
+    # Now takes ~0.5sec for ~3K groups
+    # TODO: needs tests
     def rebuild_hierarchy(region_places, subregion_places)
       PlaceHierarchy.delete_all
       region_place_ids = region_places.map(&:id)
@@ -143,8 +144,8 @@ class Seeding
       lineno = location.lineno
       elapsed_total = Time.current - @start_time
       elapsed_since_last = Time.current - @last_log_time
-      elapsed_total_formatted = ("%2.2f" % elapsed_total).rjust(5, " ")
-      elapsed_since_last_formatted = ("%2.2f" % elapsed_since_last).rjust(5, " ")
+      elapsed_total_formatted = sprintf("%2.2f", elapsed_total).rjust(5, " ")
+      elapsed_since_last_formatted = sprintf("%2.2f", elapsed_since_last).rjust(5, " ")
       Rails.logger.info "#{self.class.name} #{caller_method}##{lineno} "\
                         "#{elapsed_total_formatted}s /#{elapsed_since_last_formatted}s | "\
                         "#{msg}"
@@ -215,26 +216,17 @@ class Seeding
       end
     end
 
-    # TODO:
-    #   Generating the place names is somewhat slow: ~500msec for ~3K names
-    #   Could probably precalculate 50,000 names, store them in a file, randomly
-    #   select from there?
+    # TODO: Generating the place names is somewhat slow: ~500msec
+    #       for ~3K names. Could probably precalculate 50,000 names,
+    #       store them in a file, randomly select from there?
     def seed_units(subregion_places:, num_units_range:)
       unit_places = subregion_places.map do |subregion_place|
         rand(num_units_range).times.map do
-          if roll_d100 < 66
-            {
-              name: Seeding::Generator.restaurant_name,
-              place_type: :restaurant,
-              parent_id: subregion_place.id,
-            }
-          else
-            {
-              name: Seeding::Generator.restaurant_name,
-              place_type: :restaurant,
-              parent_id: subregion_place.id,
-            }
-          end
+          {
+            name: Seeding::Generator.restaurant_name,
+            place_type: :restaurant,
+            parent_id: subregion_place.id,
+          }
         end
       end.flatten
 
