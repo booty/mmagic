@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  sensor_type: one
+  place: one
+  active: false
+
+two:
+  name: MyString
+  sensor_type: two
+  place: two
+  active: false

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2021_09_28_035058) do
+ActiveRecord::Schema[7.0].define(version: 2022_05_07_053325) do
   create_table "checklist_items", force: :cascade do |t|
     t.integer "place_id", null: false
     t.json "contents", null: false
@@ -45,4 +45,27 @@ ActiveRecord::Schema[7.0].define(version: 2021_09_28_035058) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "sensor_types", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "units_numerator", null: false
+    t.string "units_denominator"
+    t.string "units_numerator_abbreviation", null: false
+    t.string "units_denominator_abbreviation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "sensors", force: :cascade do |t|
+    t.string "name"
+    t.integer "sensor_type_id", null: false
+    t.integer "place_id", null: false
+    t.boolean "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["place_id"], name: "index_sensors_on_place_id"
+    t.index ["sensor_type_id"], name: "index_sensors_on_sensor_type_id"
+  end
+
+  add_foreign_key "sensors", "places"
+  add_foreign_key "sensors", "sensor_types"
 end

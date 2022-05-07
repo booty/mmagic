@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  units_numerator: MyString
+  units_denominator: MyString
+  units_numerator_abbreviation: MyString
+  units_denominator_abbreviation: MyString
+
+two:
+  name: MyString
+  units_numerator: MyString
+  units_denominator: MyString
+  units_numerator_abbreviation: MyString
+  units_denominator_abbreviation: MyString
