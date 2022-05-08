@@ -11,6 +11,11 @@
 #  updated_at :datetime         not null
 #  parent_id  :integer
 #
+# Indexes
+#
+#  index_places_on_parent_id   (parent_id)
+#  index_places_on_place_type  (place_type)
+#
 class Place < ApplicationRecord
   has_closure_tree
 
