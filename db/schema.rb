@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_05_07_053325) do
+ActiveRecord::Schema[7.0].define(version: 2022_05_08_063931) do
   create_table "checklist_items", force: :cascade do |t|
     t.integer "place_id", null: false
     t.json "contents", null: false
@@ -45,6 +45,13 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_07_053325) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "sensor_readings", force: :cascade do |t|
+    t.integer "sensor_id", null: false
+    t.decimal "value", precision: 16, scale: 4, null: false
+    t.datetime "created_at", precision: nil
+    t.index ["sensor_id"], name: "index_sensor_readings_on_sensor_id"
+  end
+
   create_table "sensor_types", force: :cascade do |t|
     t.string "name", null: false
     t.string "units_numerator", null: false
@@ -66,6 +73,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_07_053325) do
     t.index ["sensor_type_id"], name: "index_sensors_on_sensor_type_id"
   end
 
+  add_foreign_key "sensor_readings", "sensors"
   add_foreign_key "sensors", "places"
   add_foreign_key "sensors", "sensor_types"
 end
