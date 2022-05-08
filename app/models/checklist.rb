@@ -1,5 +1,18 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: checklists
+#
+#  id           :integer          not null, primary key
+#  contents     :json
+#  name         :string           not null
+#  published_at :datetime
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  parent_id    :integer
+#  place_id     :integer          not null
+#
 class Checklist < ApplicationRecord
   def merged_contents()
     # conn = ActiveRecord::Base.connection

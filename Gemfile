@@ -41,6 +41,7 @@ gem "faker", require: false
 gem "oj"
 
 group :development, :test do
+  gem "annotate"
   gem "awesome_print"
   gem "pry-byebug"
   gem "pry-rails"
