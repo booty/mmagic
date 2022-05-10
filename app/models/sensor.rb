@@ -1,14 +1,20 @@
+# frozen_string_literal: true
+
 # == Schema Information
 #
 # Table name: sensors
 #
-#  id             :integer          not null, primary key
-#  active         :boolean
-#  name           :string
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  place_id       :integer          not null
-#  sensor_type_id :integer          not null
+#  id                           :integer          not null, primary key
+#  active                       :boolean
+#  fake_data_max                :decimal(16, 4)
+#  fake_data_mean               :decimal(16, 4)
+#  fake_data_min                :decimal(16, 4)
+#  fake_data_standard_deviation :decimal(16, 4)
+#  name                         :string
+#  created_at                   :datetime         not null
+#  updated_at                   :datetime         not null
+#  place_id                     :integer          not null
+#  sensor_type_id               :integer          not null
 #
 # Indexes
 #

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_05_08_181043) do
+ActiveRecord::Schema[7.0].define(version: 2022_05_08_192657) do
   create_table "checklist_items", force: :cascade do |t|
     t.integer "place_id", null: false
     t.json "contents", null: false
@@ -71,6 +71,10 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_08_181043) do
     t.boolean "active"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.decimal "fake_data_min", precision: 16, scale: 4
+    t.decimal "fake_data_max", precision: 16, scale: 4
+    t.decimal "fake_data_mean", precision: 16, scale: 4
+    t.decimal "fake_data_standard_deviation", precision: 16, scale: 4
     t.index ["place_id"], name: "index_sensors_on_place_id"
     t.index ["sensor_type_id"], name: "index_sensors_on_sensor_type_id"
   end
