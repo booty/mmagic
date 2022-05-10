@@ -14,8 +14,6 @@ module Mmagic
     # https://guides.rubyonrails.org/autoloading_and_reloading_constants.html#load_path
     config.add_autoload_paths_to_load_path = false
 
-    config.eager_load_paths << Rails.root.join("lib")
-
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
