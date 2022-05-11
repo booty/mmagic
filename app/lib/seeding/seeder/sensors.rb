@@ -4,7 +4,7 @@ class Seeding
   class Seeder
     class Sensors
       def seed!(sensors_per_place:, log_method:)
-        log_method.call(" --- start (seeding sensors) ---")
+        log_method.call("seeding sensors")
 
         sensor_types = SensorType.all
 
@@ -25,7 +25,7 @@ class Seeding
           end
         end.flatten
 
-        Sensor.import(sensors)
+        ActiveRecord::Base.logger.silence { Sensor.import(sensors) }
       end
     end
   end

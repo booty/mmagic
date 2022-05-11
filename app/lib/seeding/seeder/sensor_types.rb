@@ -8,7 +8,9 @@ class Seeding
           SensorType.new(val)
         end
 
-        SensorType.import(sensor_types)
+        ActiveRecord::Base.logger.silence do
+          SensorType.import(sensor_types)
+        end
       end
     end
   end
