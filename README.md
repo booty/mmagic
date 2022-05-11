@@ -8,7 +8,7 @@ to the food industry.
 
 # Technical Concepts Illustrated / Explored
 
-We'll explore
+We'll explore:
 
 - Fast and efficient ways to:
   - Regenerate seed data for a hierarchy of thousands of restaurants
