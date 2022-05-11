@@ -127,7 +127,7 @@ class Seeding
       end
 
       private_class_method def self.seed_corporations!(num_corporations_range:, mmagic_corporation_place:)
-        corporation_places = rand(num_corporations_range).times.map do
+        corporation_places = Array.new(rand(num_corporations_range)) do
           {
             name: Seeding::Generator.corporation_name,
             place_type: :corporation,
@@ -161,7 +161,7 @@ class Seeding
           subregion_names = Seeding::Text::REGIONS_AND_SUBREGIONS[region.name].
             sample(num_subregions)
 
-          num_subregions.times.map do
+          Array.new(num_subregions) do
             Place.new(
               {
                 name: subregion_names.pop || Faker::Books::Dune.city,
@@ -170,9 +170,9 @@ class Seeding
               },
             )
           end
-        end.flatten
+        end
 
-        Place.import(subregion_places)
+        Place.import(subregion_places.flatten)
       end
 
       # TODO: Generating the place names is somewhat slow: ~500msec
@@ -180,16 +180,16 @@ class Seeding
       #       store them in a file, randomly select from there?
       private_class_method def self.seed_units(subregion_places:, num_units_range:)
         unit_places = subregion_places.map do |subregion_place|
-          rand(num_units_range).times.map do
+          Array.new(rand(num_units_range)) do
             {
               name: Seeding::Generator.restaurant_name,
               place_type: :restaurant,
               parent_id: subregion_place.id,
             }
           end
-        end.flatten
+        end
 
-        Place.import(unit_places, batch_size: BATCH_IMPORT_SIZE)
+        Place.import(unit_places.flatten, batch_size: BATCH_IMPORT_SIZE)
       end
     end
   end
