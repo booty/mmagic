@@ -297,5 +297,55 @@ class Seeding
     COMPANY_PREFIX = %w{hyper cyber mega giga nano bio micro omni}.freeze
 
     COMPANY_SUFFIX = %w{tech dyne corp mega gen com}.freeze
+
+    STANDARD_SENSOR_TYPES = {
+      indoor_temp: {
+        name: "Indoor Temp",
+        units_numerator: "Centigrade",
+        units_numerator_abbreviation: "°C",
+        fake_data_min: 0,
+        fake_data_max: 40,
+        fake_data_mean: 21,
+        fake_data_standard_deviation: 5,
+      },
+      outdoor_temp: {
+        name: "Outdoor Temp",
+        units_numerator: "Centigrade",
+        units_numerator_abbreviation: "°C",
+        fake_data_min: -10,
+        fake_data_max: 50,
+        fake_data_mean: 21,
+        fake_data_standard_deviation: 10,
+      },
+      barometer: {
+        name: "Barometer",
+        units_numerator: "Millibars",
+        units_numerator_abbreviation: "mb",
+        fake_data_min: 870,
+        fake_data_max: 1084,
+        fake_data_mean: 1013,
+        fake_data_standard_deviation: 50,
+      },
+      humidity: {
+        name: "Humidity",
+        units_numerator: "%",
+        units_numerator_abbreviation: "%",
+        fake_data_min: 20,
+        fake_data_max: 100,
+        fake_data_mean: 65,
+        fake_data_standard_deviation: 10,
+      },
+      radiation: {
+        name: "Radiation",
+        units_numerator: "Sieverts",
+        units_numerator_abbreviation: "Sv",
+        units_denominator: "Hour",
+        units_denominator_abbreviation: "Hr",
+        fake_data_min: 0,
+        fake_data_max: 10,
+        fake_data_mean: 1,
+        fake_data_standard_deviation: 1,
+      },
+    }
   end
 end
