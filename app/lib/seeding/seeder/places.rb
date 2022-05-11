@@ -37,7 +37,7 @@ class Seeding
           )
           unit_places = Place.all - corporation_places - region_places - subregion_places - [mmagic_corporation_place]
 
-          hierarchy_count = rebuild_hierarchy(
+          rebuild_hierarchy(
             log_method,
             mmagic_corporation_place,
             corporation_places,
@@ -55,6 +55,7 @@ class Seeding
       # TODO: needs tests
       private_class_method def self.rebuild_hierarchy(log_method, mmagic_corporation_place, corporation_places, region_places, subregion_places, unit_places)
         log_method.call("rebuilding places hierarchy")
+        mmagic_place_id = mmagic_corporation_place.id
 
         parent_ids = Place.
           pluck(:id, :parent_id).
@@ -69,54 +70,51 @@ class Seeding
           me = { descendant_id: corporation_place.id }
           [
             { **me, ancestor_id: corporation_place.id, generations: 0 },
-            { **me, ancestor_id: mmagic_corporation_place.id, generations: 0 },
+            { **me, ancestor_id: mmagic_place_id, generations: 0 },
           ]
         end
 
         # REGIONS
-        stuff << region_places.map do |region_place|
-          id = region_place.id
-          corporation_parent_id = parent_ids[id]
+        stuff << region_places.map(&:id).map do |id|
           me = { descendant_id: id }
           [
             { **me, ancestor_id: id, generations: 0 },
-            { **me, ancestor_id: corporation_parent_id, generations: 1 },
-            { **me, ancestor_id: mmagic_corporation_place.id, generations: 2 },
+            { **me, ancestor_id: parent_ids[id], generations: 1 },
+            { **me, ancestor_id: mmagic_place_id, generations: 2 },
           ]
         end
 
         # SUBREGIONS
-        stuff << subregion_places.map do |subregion_place|
-          id = subregion_place.id
-          region_parent_id = parent_ids[id]
-          corporation_grandparent_id = parent_ids[parent_ids[id]]
+        stuff << subregion_places.map(&:id).map do |id|
           me = { descendant_id: id }
           [
             { **me, ancestor_id: id, generations: 0 },
-            { **me, ancestor_id: region_parent_id, generations: 1 },
-            { **me, ancestor_id: corporation_grandparent_id, generations: 2 },
-            { **me, ancestor_id: mmagic_corporation_place.id, generations: 3 },
+            { **me, ancestor_id: parent_ids[id], generations: 1 },
+            { **me, ancestor_id: get_ancestor_id(parent_ids, id, 2), generations: 2 },
+            { **me, ancestor_id: mmagic_place_id, generations: 3 },
           ]
         end
 
         # UNITS
-        stuff << unit_places.map do |unit_place|
-          id = unit_place.id
-          subregion_parent_id = parent_ids[id]
-          region_grandparent_id = parent_ids[parent_ids[id]]
-          corporation_ggrandparent_id = parent_ids[parent_ids[parent_ids[id]]]
+        stuff << unit_places.map(&:id).map do |id|
           me = { descendant_id: id }
           [
             { **me, ancestor_id: id, generations: 0 },
-            { **me, ancestor_id: subregion_parent_id, generations: 1 },
-            { **me, ancestor_id: region_grandparent_id, generations: 2 },
-            { **me, ancestor_id: corporation_ggrandparent_id, generations: 3 },
-            { **me, ancestor_id: mmagic_corporation_place.id, generations: 4 },
+            { **me, ancestor_id: parent_ids[id], generations: 1 },
+            { **me, ancestor_id: get_ancestor_id(parent_ids, id, 2), generations: 2 },
+            { **me, ancestor_id: get_ancestor_id(parent_ids, id, 3), generations: 3 },
+            { **me, ancestor_id: mmagic_place_id, generations: 4 },
           ]
         end
 
         result = PlaceHierarchy.import(stuff.flatten)
         raise if result.failed_instances.any?
+      end
+
+      private_class_method def self.get_ancestor_id(array, id, generations)
+        return array[array[array[id]]] if generations == 3
+        return array[array[id]] if generations == 2
+        raise "This hacky method has nothing for you"
       end
 
       private_class_method def self.seed_mmagic_corporation!
