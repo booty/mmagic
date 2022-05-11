@@ -10,6 +10,10 @@ module HashExtensions
       end
     end
   end
+
+  def sample
+    self[keys.sample]
+  end
 end
 
 class Hash
